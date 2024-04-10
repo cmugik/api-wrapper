@@ -22,3 +22,15 @@ node_modules/
 
 # Ignore any package-lock.json file
 package-lock.json
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
