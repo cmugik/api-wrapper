@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 class EncryptionUtil {
-  
+
     // Class TBD if it will be used or not
     // A private variable to hold the encryption key.
     private encryptionKey: string;

@@ -1,38 +1,38 @@
 class APIUtil {
     // Base URL for the LLM API
     private baseURL: string;
-  
+
     constructor(baseURL: string) {
-      this.baseURL = baseURL;
+        this.baseURL = baseURL;
     }
-  
+
     /**
-     * Makes a GET request to the specified endpoint of the LLM API.
-     * @param endpoint The endpoint to request.
-     * @param params Optional query parameters.
-     * @returns A promise that resolves with the response data.
+     * Makes a streaming GET request using Server-Sent Events.
+     * @param endpoint The endpoint for the streaming request.
+     * @param params Optional query parameters for the request.
+     * @returns An EventSource instance for handling streaming data.
      */
-    get(endpoint: string, params?: Record<string, any>): Promise<any> {
-      // Implementation
+    streamGet(endpoint: string, params?: Record<string, any>): EventSource {
+        // Implementation
     }
-  
+
     /**
-     * Makes a POST request to the specified endpoint of the LLM API.
+     * Makes a POST request with an option for streaming response.
      * @param endpoint The endpoint to send data to.
      * @param body The body of the request.
-     * @returns A promise that resolves with the response data.
+     * @returns A promise that resolves with the response data or a streaming EventSource.
      */
-    post(endpoint: string, body: any): Promise<any> {
-      // Implementation
-    }
-  
+    post(endpoint: string, body: any): Promise<any> | EventSource {
+        // Adjusted implementation to support streaming
+    } 
+
     /**
      * Implement rate limiting mechanism.
      */
     rateLimit(): void {
-      // Implementation
+        // Implementation
     }
-  
+
     /**
      * Implement retry logic for requests.
      * @param attemptFunction The function representing the attempt.
@@ -40,7 +40,7 @@ class APIUtil {
      * @returns A promise that resolves with the successful attempt's result.
      */
     retry<T>(attemptFunction: () => Promise<T>, retries: number = 3): Promise<T> {
-      // Implementation
+        // Implementation
     }
-  }
+}
   
