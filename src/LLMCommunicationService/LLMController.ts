@@ -39,16 +39,19 @@ class LLMController {
     sendRequest(payload: SendRequestInput): Promise<any> {
         const openAiModels = ['gpt-4-turbo', 'gpt-4-32k', 'gpt-4', 'gpt-3.5-turbo'];
         const claudeModels = ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'];
+        const geminiModels = ['models/gemini-1.5-pro-latest', 'models/gemini-pro'];
 
         const model = payload.model;
+
         if (openAiModels.includes(model)) {
             sendOpenAIAPIRequest(payload);
-        } else if (claudeModels.includes(model)){
+        } else if (claudeModels.includes(model)) {
             sendAnthropicAPIRequest(payload);
+        } else if (geminiModels.includes(model)) {
+            sendGeminiAPIRequest(payload);
         } else {
             // post an error
         }
-    }
 
     /**
      * Sends a request to the openAI API with the provided payload.
