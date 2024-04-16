@@ -5,13 +5,6 @@ interface Conversation {
     createdAt: string;
 }
 
-interface Message {
-    role: 'user' | 'system';
-    content: string;
-    name?: string; 
-    date: Date; // Use Date type for timestamps
-    id: number; 
-}
 
 export class ConversationService {
     private db: sqlite3.Database;

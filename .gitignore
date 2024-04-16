@@ -19,6 +19,8 @@ node_modules/
 
 # Ignore any TypeScript declaration files
 *.d.ts
+# Except for global.d.ts
+!message.d.ts
 
 # Ignore any package-lock.json file
 package-lock.json

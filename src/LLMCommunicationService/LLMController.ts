@@ -2,12 +2,6 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-interface Message {
-  role: 'user' | 'system';
-  content: string;
-  name?: string;
-}
-
 interface SendRequestInput {
   model: string;
   prompt: string;
