@@ -39,7 +39,7 @@ describe('ConversationDatabase', () => {
       name: 'Test User',
       date: new Date(),
     };
-    const providedId: number = await db.saveMessage(conversationId, message);
+    const providedId: number = await db.saveMessage(message);
     message.id = providedId;
     const messages = await db.getRecentMessages(conversationId);
     expect(messages.length).toBe(1);
@@ -85,10 +85,10 @@ describe('ConversationDatabase', () => {
     date: new Date(),
   };
 
-  const providedId1 = await db.saveMessage(conversationId, message1);
-  const providedId2 = await db.saveMessage(conversationId, message2);
-  const providedId3 = await db.saveMessage(conversationId, message3);
-  const providedId4 = await db.saveMessage(conversationId, message4);
+  const providedId1 = await db.saveMessage(message1);
+  const providedId2 = await db.saveMessage(message2);
+  const providedId3 = await db.saveMessage(message3);
+  const providedId4 = await db.saveMessage(message4);
 
   message1.id = providedId1;
   message2.id = providedId2;
@@ -115,7 +115,7 @@ describe('ConversationDatabase', () => {
               date: new Date(Date.now() + i * 50), // Ensure unique timestamp
           };
           await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
-          const providedId = await db.saveMessage(conversationId, message);
+          const providedId = await db.saveMessage(message);
           message.id = providedId;
           messages.push(message);
       }
@@ -141,7 +141,7 @@ describe('ConversationDatabase', () => {
               date: new Date(),
           };
           await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
-          const providedId = await db.saveMessage(conversationId, message);
+          const providedId = await db.saveMessage(message);
           message.id = providedId;
           messages.push(message);
       }

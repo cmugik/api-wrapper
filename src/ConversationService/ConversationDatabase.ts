@@ -84,7 +84,7 @@ export class ConversationDatabase {
     }
 
     // returns id of newly created convo
-    startNewConversation(): number {
+    public startNewConversation(): number {
         try {
             const stmt: Statement = this.db.prepare('INSERT INTO conversation DEFAULT VALUES');
             const info = stmt.run();
@@ -95,10 +95,10 @@ export class ConversationDatabase {
         }
     }
 
-    public async saveMessage(conversationId: number, message: Message): Promise<number> {
+    public async saveMessage(message: Message): Promise<number> {
         try {
             const stmt: Statement = this.db.prepare('INSERT INTO message (conversationId, role, content, name, date, severity) VALUES (?, ?, ?, ?, ?, ?)');
-            const info = stmt.run(conversationId, message.role, message.content, message.name, message.date.toISOString(), message.severity);
+            const info = stmt.run(message.conversationId, message.role, message.content, message.name, message.date.toISOString(), message.severity);
             return Number(info.lastInsertRowid);
         } catch (err) {
             console.error('Error saving message', err);
