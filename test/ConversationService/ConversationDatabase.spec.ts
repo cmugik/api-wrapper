@@ -39,9 +39,9 @@ describe('ConversationDatabase', () => {
       name: 'Test User',
       date: new Date(),
     };
-    const providedId: number = await db.saveMessage(message);
+    const providedId: number = db.saveMessage(message);
     message.id = providedId;
-    const messages = await db.getRecentMessages(conversationId);
+    const messages = db.getRecentMessages(conversationId);
     expect(messages.length).toBe(1);
     expect(messages[0]).toEqual(message);
   });
@@ -85,17 +85,17 @@ describe('ConversationDatabase', () => {
     date: new Date(),
   };
 
-  const providedId1 = await db.saveMessage(message1);
-  const providedId2 = await db.saveMessage(message2);
-  const providedId3 = await db.saveMessage(message3);
-  const providedId4 = await db.saveMessage(message4);
+  const providedId1 = db.saveMessage(message1);
+  const providedId2 = db.saveMessage(message2);
+  const providedId3 = db.saveMessage(message3);
+  const providedId4 = db.saveMessage(message4);
 
   message1.id = providedId1;
   message2.id = providedId2;
   message3.id = providedId3;
   message4.id = providedId4;
 
-  const messages = await db.getRecentMessages(conversationId, 3);
+  const messages = db.getRecentMessages(conversationId, 3);
   expect(messages.length).toBe(3);
   expect(messages).toEqual([message4, message3, message2]);
   })
@@ -115,13 +115,13 @@ describe('ConversationDatabase', () => {
               date: new Date(Date.now() + i * 50), // Ensure unique timestamp
           };
           await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
-          const providedId = await db.saveMessage(message);
+          const providedId = db.saveMessage(message);
           message.id = providedId;
           messages.push(message);
       }
 
       // Fetch messages with offset of 5, default limit of 10
-      const fetchedMessages = await db.getRecentMessages(conversationId, undefined, 5);
+      const fetchedMessages = db.getRecentMessages(conversationId, undefined, 5);
       expect(fetchedMessages.length).toBe(10);
       expect(fetchedMessages).toEqual(messages.slice(0,10).reverse());
   })
@@ -141,12 +141,12 @@ describe('ConversationDatabase', () => {
               date: new Date(),
           };
           await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
-          const providedId = await db.saveMessage(message);
+          const providedId = db.saveMessage(message);
           message.id = providedId;
           messages.push(message);
       }
-      const fetchedMessagesShouldBeLessThanRequested = await db.getRecentMessages(conversationId, 15, 10);
-      const fetchedMessagesShouldBeEmpty = await db.getRecentMessages(conversationId, 10, 500);
+      const fetchedMessagesShouldBeLessThanRequested = db.getRecentMessages(conversationId, 15, 10);
+      const fetchedMessagesShouldBeEmpty = db.getRecentMessages(conversationId, 10, 500);
       expect(fetchedMessagesShouldBeLessThanRequested.length).toBe(10); // not 15
       expect(fetchedMessagesShouldBeLessThanRequested).toEqual(messages.slice(0,10).reverse());
       expect(fetchedMessagesShouldBeEmpty.length).toBe(0);
@@ -155,7 +155,7 @@ describe('ConversationDatabase', () => {
   it('should retrieve all conversations', async () => {
       const conversationId1 = db.startNewConversation();
       const conversationId2 = db.startNewConversation();
-      const conversations: Conversation[] = await db.getAllConversations();
+      const conversations: Conversation[] = db.getAllConversations();
       expect(conversations.length).toBe(2);
       expect(conversations.map((c) => c.id)).toContain(conversationId1);
       expect(conversations.map((c) => c.id)).toContain(conversationId2);

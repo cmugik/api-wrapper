@@ -95,7 +95,7 @@ export class ConversationDatabase {
         }
     }
 
-    public async saveMessage(message: Message): Promise<number> {
+    public saveMessage(message: Message): number {
         try {
             const stmt: Statement = this.db.prepare('INSERT INTO message (conversationId, role, content, name, date, severity) VALUES (?, ?, ?, ?, ?, ?)');
             const info = stmt.run(message.conversationId, message.role, message.content, message.name, message.date.toISOString(), message.severity);
@@ -106,27 +106,36 @@ export class ConversationDatabase {
         }
     }
 
-    public async getRecentMessages(conversationId: number, numMessages: number = 10, offset: number = 0): Promise<Message[]> {
-        const stmt: Statement = this.db.prepare(`
-            SELECT * FROM message 
-            WHERE conversationId = ?
-            ORDER BY date DESC
-            LIMIT ? OFFSET ?
-        `);
-        const rows: Message[] = stmt.all(conversationId, numMessages, offset) as Message[];
-        for (const message of rows) {
-            message.date = new Date(message.date);
-            message.severity = message.severity ?? undefined;
-        } 
-        return rows as Message[];
+    public getRecentMessages(conversationId: number, numMessages: number = 10, offset: number = 0): Message[] {
+        try {
+            const stmt: Statement = this.db.prepare(`
+                                                    SELECT * FROM message 
+                                                    WHERE conversationId = ?
+                                                        ORDER BY date DESC
+                                                    LIMIT ? OFFSET ?
+                                                        `);
+            const rows: Message[] = stmt.all(conversationId, numMessages, offset) as Message[];
+            for (const message of rows) {
+                message.date = new Date(message.date);
+                message.severity = message.severity ?? undefined;
+            }
+            return rows;
+        } catch (error) {
+            console.error('Error in getRecentMessages:', error);
+            throw error;
+        }
     }
 
-    public async getAllConversations(): Promise<Conversation[]> {
-        const stmt: Statement = this.db.prepare('SELECT * FROM conversation');
-        const rows: Conversation[] = stmt.all() as Conversation[];
-        return rows as Conversation[];
+    public getAllConversations(): Conversation[] {
+        try {
+            const stmt: Statement = this.db.prepare('SELECT * FROM conversation');
+            const rows: Conversation[] = stmt.all() as Conversation[];
+            return rows;
+        } catch (error) {
+            console.error('Error getting all conversations:', error);
+            throw error;
+        }
     }
-
     public async close(): Promise<void> {
         if (!this.db.open) {
             throw new Error("Database is not open.");
