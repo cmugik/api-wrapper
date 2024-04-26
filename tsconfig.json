@@ -1,10 +1,10 @@
 
 {
     "compilerOptions": {
-        "module": "es6",
+        "module": "commonjs",
         "esModuleInterop": true,
-        "moduleResolution": "nodenext",
         "target": "es6",
+        "outDir": "./dist",
         "typeRoots": ["./node_modules/@types", "./types"],
         "sourceMap": true,
         "lib": ["es6"]
