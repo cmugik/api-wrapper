@@ -1,6 +1,5 @@
-export {};
-
 declare global {
+
     interface Message {
         role: 'user' | 'system';
         content: string;
@@ -8,5 +7,14 @@ declare global {
         severity?: 'warning' | 'error';
         date: Date;
         id: number; 
+        conversationId: number;
     }
+
+    interface Conversation {
+        id: number;
+        name: string;
+        createdAt: string;
+    }
+
 }
+export { Message, Conversation }
