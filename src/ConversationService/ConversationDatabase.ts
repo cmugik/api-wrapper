@@ -84,16 +84,47 @@ export class ConversationDatabase {
     }
 
     // returns newly created convo
-    public startNewConversation(): Conversation {
+    public startNewConversation(convoName: string = ''): Conversation {
         try {
-            const stmt: Statement = this.db.prepare('INSERT INTO conversation DEFAULT VALUES');
-            const info = stmt.run();
+            const stmt: Statement = this.db.prepare('INSERT INTO conversation (name, createdAt) VALUES (?, ?)');
+            const createdAtDate = new Date();
+            const info = stmt.run(convoName, createdAtDate.toISOString());
             const createdId: number = Number(info.lastInsertRowid);
-            const row: Conversation = this.db.prepare('SELECT * FROM conversation WHERE id = ?').get(createdId) as Conversation;
+            const conversation: Conversation = {
+                name: convoName,
+                createdAt: createdAtDate,
+                id: createdId
+            };
+            return conversation;
+        } catch (err) {
+            console.error('Error starting new empty convo', err);
+            throw err;
+        }
+    }
+
+    public updateConversationName(conversationId: number, newName: string): void {
+        try {
+            const stmt: Statement = this.db.prepare('UPDATE conversation SET name = ? WHERE id = ?');
+            const info = stmt.run(newName, conversationId);
+            if (info.changes !== 1) {
+                throw new Error(`Failed to update conversation name for conversation ID ${conversationId}`);
+            }
+        } catch (err) {
+            console.error('Error updating conversation name', err);
+            throw err;
+        }
+    }
+
+    public getConversationById(conversationId: number): Conversation {
+        try {
+            const row: Conversation = this.db.prepare('SELECT * FROM conversation WHERE id = ?').get(conversationId) as Conversation;
+            if (!row) {
+                throw new Error(`Conversation with ID ${conversationId} not found`);
+            }
             row.createdAt = new Date(row.createdAt);
             return row;
         } catch (err) {
-            console.error('Error starting new empty convo', err);
+            console.error(`Error getting conversation with ID ${conversationId}`, err);
             throw err;
         }
     }

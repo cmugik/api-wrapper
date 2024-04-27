@@ -33,13 +33,39 @@ describe('ConversationDatabase', () => {
     expect(await db.checkTablesExist()).toBe(true);
   });
 
-  it('should start a new conversation', () => {
+  it('should start a new conversation with no name', () => {
       const conversation: Conversation = db.startNewConversation();
       expect(conversation.id).toBeGreaterThan(0); 
       expect(conversation.name).toBeFalsy();
       expect(conversation.createdAt).toBeInstanceOf(Date);
       const conversations: Conversation[] = db.getAllConversations();
       expect(conversations).toContainEqual(conversation);
+  });
+
+  it('should start a new conversation with a name', () => {
+      const conversation: Conversation = db.startNewConversation('name123');
+      expect(conversation.id).toBeGreaterThan(0); 
+      expect(conversation.name).toBe('name123');
+      expect(conversation.createdAt).toBeInstanceOf(Date);
+      const conversations: Conversation[] = db.getAllConversations();
+      expect(conversations).toContainEqual(conversation);
+  })
+
+  it('should update the conversation name, and re-request it by id', () => {
+    const conversation: Conversation = db.startNewConversation();
+    const newName = 'Updated Conversation';
+
+    db.updateConversationName(conversation.id, newName);
+
+    const updatedConversation: Conversation = db.getConversationById(conversation.id);
+    expect(updatedConversation.name).toBe(newName);
+  });
+
+  it('should throw an error if the conversation does not exist', () => {
+    const nonExistentConversationId = 999;
+    const newName = 'Updated Conversation';
+
+    expect(() => db.updateConversationName(nonExistentConversationId, newName)).toThrowError();
   });
 
   it('should save and retrieve a message, providing it with an ID', async () => {
