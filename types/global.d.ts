@@ -13,7 +13,7 @@ declare global {
     interface Conversation {
         id: number;
         name: string;
-        createdAt: string;
+        createdAt: Date;
     }
 
 }

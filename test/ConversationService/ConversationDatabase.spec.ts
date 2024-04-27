@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
+import fs from 'fs';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, expectTypeOf } from 'vitest';
 import { ConversationDatabase } from '../../src/ConversationService/ConversationDatabase';
 import { Conversation, Message } from '../../types/global';
 describe('ConversationDatabase', () => {
@@ -20,17 +21,29 @@ describe('ConversationDatabase', () => {
     await db.close();
   });
 
+  afterAll(() => {
+      try {
+          //fs.unlinkSync("./conversations.db");
+      } catch (err) {
+          console.error(err);
+      }
+  })
+
   it('should create and initialize the database', async () => {
     expect(await db.checkTablesExist()).toBe(true);
   });
 
   it('should start a new conversation', () => {
-    const conversationId = db.startNewConversation();
-    expect(typeof conversationId).toBe('number');
+      const conversation: Conversation = db.startNewConversation();
+      expect(conversation.id).toBeGreaterThan(0); 
+      expect(conversation.name).toBeFalsy();
+      expect(conversation.createdAt).toBeInstanceOf(Date);
+      const conversations: Conversation[] = db.getAllConversations();
+      expect(conversations).toContainEqual(conversation);
   });
 
   it('should save and retrieve a message, providing it with an ID', async () => {
-    const conversationId = db.startNewConversation();
+    const conversationId = db.startNewConversation().id;
     const message: Message = {
       id: -1,
       conversationId,
@@ -47,7 +60,7 @@ describe('ConversationDatabase', () => {
   });
   
   it('should save and retrieve multiple messages', async () => {
-  const conversationId = db.startNewConversation();
+  const conversationId: number = db.startNewConversation().id;
 
   const message1: Message = {
     id: -1,
@@ -101,7 +114,7 @@ describe('ConversationDatabase', () => {
   })
 
   it('should save and retrieve multiple messages with offset', async () => {
-      const conversationId = db.startNewConversation();
+      const conversationId = db.startNewConversation().id;
 
       // Generate and save 15 messages with staggered timestamps
       const messages: Message[] = [];
@@ -127,7 +140,7 @@ describe('ConversationDatabase', () => {
   })
 
   it('should provide all available and not an error if numMessages < numRequestedMessages + offset', async () => {
-      const conversationId = db.startNewConversation();
+      const conversationId = db.startNewConversation().id;
 
       // Generate and save 20 messages with staggered timestamps
       const messages: Message[] = [];
@@ -153,11 +166,11 @@ describe('ConversationDatabase', () => {
   })
 
   it('should retrieve all conversations', async () => {
-      const conversationId1 = db.startNewConversation();
-      const conversationId2 = db.startNewConversation();
+      const conversation1 = db.startNewConversation();
+      const conversation2 = db.startNewConversation();
       const conversations: Conversation[] = db.getAllConversations();
       expect(conversations.length).toBe(2);
-      expect(conversations.map((c) => c.id)).toContain(conversationId1);
-      expect(conversations.map((c) => c.id)).toContain(conversationId2);
+      expect(conversations).toContainEqual(conversation1);
+      expect(conversations).toContainEqual(conversation2);
   });
 });

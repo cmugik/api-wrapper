@@ -83,12 +83,15 @@ export class ConversationDatabase {
         }
     }
 
-    // returns id of newly created convo
-    public startNewConversation(): number {
+    // returns newly created convo
+    public startNewConversation(): Conversation {
         try {
             const stmt: Statement = this.db.prepare('INSERT INTO conversation DEFAULT VALUES');
             const info = stmt.run();
-            return Number(info.lastInsertRowid);
+            const createdId: number = Number(info.lastInsertRowid);
+            const row: Conversation = this.db.prepare('SELECT * FROM conversation WHERE id = ?').get(createdId) as Conversation;
+            row.createdAt = new Date(row.createdAt);
+            return row;
         } catch (err) {
             console.error('Error starting new empty convo', err);
             throw err;
@@ -130,12 +133,16 @@ export class ConversationDatabase {
         try {
             const stmt: Statement = this.db.prepare('SELECT * FROM conversation');
             const rows: Conversation[] = stmt.all() as Conversation[];
+            for (const row of rows) {
+                row.createdAt = new Date(row.createdAt);
+            }
             return rows;
         } catch (error) {
             console.error('Error getting all conversations:', error);
             throw error;
         }
     }
+
     public async close(): Promise<void> {
         if (!this.db.open) {
             throw new Error("Database is not open.");
