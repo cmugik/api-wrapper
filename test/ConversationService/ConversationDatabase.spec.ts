@@ -62,7 +62,7 @@ describe('ConversationDatabase', () => {
   });
 
   it('should throw an error if the conversation does not exist', () => {
-    const nonExistentConversationId = 999;
+    const nonExistentConversationId = -5;
     const newName = 'Updated Conversation';
 
     expect(() => db.updateConversationName(nonExistentConversationId, newName)).toThrowError();
@@ -153,7 +153,6 @@ describe('ConversationDatabase', () => {
               name: i % 2 === 0 ? 'Assistant' : 'Test User',
               date: new Date(Date.now() + i * 50), // Ensure unique timestamp
           };
-          await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
           const providedId = db.saveMessage(message);
           message.id = providedId;
           messages.push(message);

@@ -36,6 +36,6 @@ package-lock.json
 *.sw?
 
 # Ignore database files
-*.db
+*.db*
 
 *.tsbuildinfo
