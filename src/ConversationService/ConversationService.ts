@@ -48,11 +48,11 @@ export class ConversationService {
         if (this.isRoutesSetup == false) {
             this.isRoutesSetup = true;
 
-            this.app.post('/api/msg/save', (req, res) => this.saveMessage(req, res)); 
-            this.app.get('/api/msg/getRecent', (req, res) => this.getRecentMessages(req, res)); 
+            this.app.post('/api/messages', (req, res) => this.saveMessage(req, res)); 
+            this.app.get('/api/messages', (req, res) => this.getRecentMessages(req, res)); 
 
-            this.app.post('/api/convo/start', (req, res) => this.startConversation(req, res)); 
-            this.app.get('/api/convo/getAll', (req, res) => this.getAllConversations(req, res)); 
+            this.app.post('/api/conversations', (req, res) => this.startConversation(req, res)); 
+            this.app.get('/api/conversations', (req, res) => this.getAllConversations(req, res)); 
         }
     }
 
@@ -87,7 +87,7 @@ export class ConversationService {
             res.status(200).json(recentMessages);
         } catch (err) {
             console.error('failed to retrieve messages', err);
-            res.status(500).json({error: 'failed to retrieve msgs'});
+            res.status(500).json({error: 'failed to retrieve messagess'});
         }
     }
 

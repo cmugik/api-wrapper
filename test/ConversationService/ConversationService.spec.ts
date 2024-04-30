@@ -19,7 +19,7 @@ describe('ConversationService', () => {
     })
 
     it('should start a new conversation with no name', async () => {
-        const response = await axios.post('http://localhost:3001/api/convo/start');
+        const response = await axios.post('http://localhost:3001/api/conversations');
         expect(response.status).toBe(201);
         expect(response.data).toBeDefined();
         const conversation: Conversation = {
@@ -33,7 +33,7 @@ describe('ConversationService', () => {
 
     it('should start a new conversation with a name', async () => {
         const testName: string = "josephname";
-        const response = await axios.post('http://localhost:3001/api/convo/start', {
+        const response = await axios.post('http://localhost:3001/api/conversations', {
             name: testName
         });
         expect(response.status).toBe(201);
@@ -48,7 +48,7 @@ describe('ConversationService', () => {
     });
 
     it('should save a valid message to the database', async () => {
-        const conversationResponse = await axios.post('http://localhost:3001/api/convo/start');
+        const conversationResponse = await axios.post('http://localhost:3001/api/conversations');
         const conversationId = conversationResponse.data.id;
 
         const message1: Message = {
@@ -60,14 +60,14 @@ describe('ConversationService', () => {
             date: new Date(),
         };
 
-        const response = await axios.post('http://localhost:3001/api/msg/save', message1);
+        const response = await axios.post('http://localhost:3001/api/messages', message1);
 
         expect(response.status).toBe(201);
         expect(response.data).toBeTypeOf("number");
     });
 
     it('should retrieve recent messages with correct ordering', async () => {
-        const conversationResponse = await axios.post('http://localhost:3001/api/convo/start');
+        const conversationResponse = await axios.post('http://localhost:3001/api/conversations');
         const convoId: number = conversationResponse.data.id;
 
         const messageArr: Message[] = [];
@@ -87,11 +87,11 @@ describe('ConversationService', () => {
                 date: date
             };
 
-            const messageResponse = await axios.post('http://localhost:3001/api/msg/save', message);
+            const messageResponse = await axios.post('http://localhost:3001/api/messages', message);
             message.id = messageResponse.data;
             messageArr.push(message);
         }
-        const requestMessageResponse = await axios.get(`http://localhost:3001/api/msg/getRecent?conversationId=${convoId}&offset=5&limit=10`);
+        const requestMessageResponse = await axios.get(`http://localhost:3001/api/messages?conversationId=${convoId}&offset=5&limit=10`);
         // should have the 10 messages that are offset by 5 - so messages 19-15 are out, we are getting messages 14-5 in that order
         const responseArr: Message[] = [];
         for (const response of requestMessageResponse.data) {
@@ -106,13 +106,13 @@ describe('ConversationService', () => {
     it('should retrieve all conversations', async () => {
         const conversations: Conversation[] = [];
         for (let i = 0; i < 5; i++) {
-            const response = await axios.post('http://localhost:3001/api/convo/start');
+            const response = await axios.post('http://localhost:3001/api/conversations');
             expect(response.status).toBe(201);
             const conversation: Conversation = response.data;
             conversations.push(conversation);
         }
 
-        const response = await axios.get('http://localhost:3001/api/convo/getAll');
+        const response = await axios.get('http://localhost:3001/api/conversations');
 
         expect(response.status).toBe(200);
         expect(response.data).toHaveLength(5);
@@ -124,26 +124,26 @@ describe('ConversationService', () => {
 
     it('should gracefully handle errors when saving a message', async () => {
         try {
-            await axios.post('http://localhost:3001/api/msg/save', {});
+            await axios.post('http://localhost:3001/api/messages', {});
             expect(false).toBe(true);
         } catch (errorResponse) {
             expect(errorResponse.response.status).toBe(500);
         }
-        const conversationResponse = await axios.post('http://localhost:3001/api/convo/start');
+        const conversationResponse = await axios.post('http://localhost:3001/api/conversations');
         expect(conversationResponse.status).toBe(201);
     });
 
     it('should gracefully handle retrieval when no messages exist', async () => {
-        const conversationResponse = await axios.post('http://localhost:3001/api/convo/start');
+        const conversationResponse = await axios.post('http://localhost:3001/api/conversations');
         const convoId = conversationResponse.data.id;
 
-        const response = await axios.get(`http://localhost:3001/api/msg/getRecent?conversationId=${convoId}&offset=0&limit=10`);
+        const response = await axios.get(`http://localhost:3001/api/messages?conversationId=${convoId}&offset=0&limit=10`);
             expect(response.status).toBe(200);
         expect(response.data).toHaveLength(0);
     });
 
     it('should gracefully handle retrieval when no conversations exist', async () => {
-        const response = await axios.get('http://localhost:3001/api/convo/getAll');
+        const response = await axios.get('http://localhost:3001/api/conversations');
         expect(response.status).toBe(200);
         expect(response.data).toHaveLength(0);
     });
