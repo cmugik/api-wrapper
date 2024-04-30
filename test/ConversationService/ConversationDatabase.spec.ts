@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, expectTypeOf } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { ConversationDatabase } from '../../src/ConversationService/ConversationDatabase';
 import { Conversation, Message } from '../../types/global';
 describe('ConversationDatabase', () => {
@@ -12,7 +11,7 @@ describe('ConversationDatabase', () => {
       await db.close();
   })
 
-  beforeEach(async () => {
+  beforeEach( () => {
     db = new ConversationDatabase();
   });
 
@@ -68,7 +67,7 @@ describe('ConversationDatabase', () => {
     expect(() => db.updateConversationName(nonExistentConversationId, newName)).toThrowError();
   });
 
-  it('should save and retrieve a message, providing it with an ID', async () => {
+  it('should save and retrieve a message, providing it with an ID',  () => {
     const conversationId = db.startNewConversation().id;
     const message: Message = {
       id: -1,
@@ -85,61 +84,32 @@ describe('ConversationDatabase', () => {
     expect(messages[0]).toEqual(message);
   });
   
-  it('should save and retrieve multiple messages', async () => {
-  const conversationId: number = db.startNewConversation().id;
+  it('should save and retrieve multiple messages',  () => {
+      const conversationId = db.startNewConversation().id;
+      expect(db.getConversationById(conversationId)).toBeDefined();
 
-  const message1: Message = {
-    id: -1,
-    conversationId,
-    role: 'user',
-    content: 'Hello, world!',
-    name: 'Test User',
-    date: new Date(),
-  };
-  await new Promise(resolve => setTimeout(resolve, 50));
-  const message2: Message = {
-    id: -1,
-    conversationId,
-    role: 'system',
-    content: 'Hi there!',
-    name: 'Assistant',
-    date: new Date(),
-  };
-  await new Promise(resolve => setTimeout(resolve, 50));
-  const message3: Message = {
-    id: -1,
-    conversationId,
-    role: 'user',
-    content: 'How are you?',
-    name: 'Test User',
-    date: new Date(),
-  };
-  await new Promise(resolve => setTimeout(resolve, 50));
-  const message4: Message = {
-    id: -1,
-    conversationId,
-    role: 'system',
-    content: 'I\'m doing well, thanks for asking!',
-    name: 'Assistant',
-    date: new Date(),
-  };
+      // Generate and save 4 messages with staggered timestamps
+      const messages: Message[] = [];
+      for (let i = 1; i <= 4; i++) {
+          const message: Message = {
+              id: -1,
+              conversationId,
+              role: i % 2 === 0 ? 'system' : 'user',
+              content: `Message ${i}`,
+              name: i % 2 === 0 ? 'Assistant' : 'Test User',
+              date: new Date(Date.now() + i * 50), // Ensure unique timestamp
+          };
+          const providedId = db.saveMessage(message);
+          message.id = providedId;
+          messages.push(message);
+      }
 
-  const providedId1 = db.saveMessage(message1);
-  const providedId2 = db.saveMessage(message2);
-  const providedId3 = db.saveMessage(message3);
-  const providedId4 = db.saveMessage(message4);
+      const recentMessages = db.getRecentMessages(conversationId, 3);
+      expect(recentMessages.length).toBe(3);
+      expect(recentMessages).toEqual(messages.splice(1,5).reverse());
+  });
 
-  message1.id = providedId1;
-  message2.id = providedId2;
-  message3.id = providedId3;
-  message4.id = providedId4;
-
-  const messages = db.getRecentMessages(conversationId, 3);
-  expect(messages.length).toBe(3);
-  expect(messages).toEqual([message4, message3, message2]);
-  })
-
-  it('should save and retrieve multiple messages with offset', async () => {
+  it('should save and retrieve multiple messages with offset',  () => {
       const conversationId = db.startNewConversation().id;
 
       // Generate and save 15 messages with staggered timestamps
@@ -164,7 +134,7 @@ describe('ConversationDatabase', () => {
       expect(fetchedMessages).toEqual(messages.slice(0,10).reverse());
   })
 
-  it('should provide all available and not an error if numMessages < numRequestedMessages + offset', async () => {
+  it('should provide all available and not an error if numMessages < numRequestedMessages + offset', () => {
       const conversationId = db.startNewConversation().id;
 
       // Generate and save 20 messages with staggered timestamps
@@ -176,9 +146,8 @@ describe('ConversationDatabase', () => {
               role: i % 2 === 0 ? 'system' : 'user',
               content: `Message ${i}`,
               name: i % 2 === 0 ? 'Assistant' : 'Test User',
-              date: new Date(),
+              date: new Date(Date.now() + i * 50),
           };
-          await new Promise(resolve => setTimeout(resolve, 25)); // Short delay
           const providedId = db.saveMessage(message);
           message.id = providedId;
           messages.push(message);
@@ -190,7 +159,7 @@ describe('ConversationDatabase', () => {
       expect(fetchedMessagesShouldBeEmpty.length).toBe(0);
   })
 
-  it('should retrieve all conversations', async () => {
+  it('should retrieve all conversations', () => {
       const conversation1 = db.startNewConversation();
       const conversation2 = db.startNewConversation();
       const conversations: Conversation[] = db.getAllConversations();

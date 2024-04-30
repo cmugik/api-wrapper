@@ -16,6 +16,7 @@ export class ConversationDatabase {
     constructor() {
         this.db = new Database('conversations.db', {});
         this.db.pragma('journal_mode = WAL');    
+        this.db.pragma('foreign_keys = ON');
     }
 
     public async initialize(): Promise<void> {
