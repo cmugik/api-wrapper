@@ -7,7 +7,7 @@ import { MessageStreamEvent } from '@anthropic-ai/sdk/resources';
 import { Stream } from '@anthropic-ai/sdk/streaming';
 import { GenerateContentStreamResult } from '@google/generative-ai';
 
-describe('Test Suite', () => {
+describe('LLMController', () => {
 
     const toAnthropicRoles = (payload: any) => {
         if (payload.previousMessages) {
