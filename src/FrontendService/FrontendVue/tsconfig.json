@@ -1,4 +1,27 @@
 {
+  "compilerOptions": {
+    "target": "esnext",                     // Set to latest ECMAScript version
+    "module": "esnext",                     // Use modern module system
+    "moduleResolution": "node",             // Module resolution strategy
+    "lib": ["esnext", "dom"],               // Include types for ECMAScript and DOM APIs
+    "jsx": "preserve",                      // Preserve JSX to be transformed by Babel later
+    "strict": true,                         // Enable all strict type-checking options
+    "esModuleInterop": true,                // Allows default imports from modules with no default export
+    "allowSyntheticDefaultImports": true,   // Allow default imports from modules with no default export
+    "experimentalDecorators": true,         // Enable experimental support for decorators
+    "skipLibCheck": true,                   // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file
+    "resolveJsonModule": true              // Allow importing '.json' files
+  },
+  "include": [
+    "src/**/*.ts",                         // Include all TypeScript files in src
+    "src/**/*.d.ts",                       // Include all TypeScript definition files in src
+    "src/**/*.tsx",                        // Include TSX files if using JSX
+    "src/**/*.vue"                         // Include Vue files
+  ],
+  "exclude": [
+    "node_modules"                         // Exclude the node_modules directory
+  ],
   "files": [],
   "references": [
     {
