@@ -4,9 +4,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GenerateContentStreamResult, GoogleGenerativeAI } from "@google/generative-ai";
 import { retryAsync } from "ts-retry";
 import type { ChatCompletionStream } from "openai/lib/ChatCompletionStream";
-import type { Stream } from "@anthropic-ai/sdk/streaming";
-import type { MessageStreamEvent } from "@anthropic-ai/sdk/resources";
 import type { Message } from "../../types/global.d.ts";
+import { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream.js';
 
     export enum OpenAIModels {
         "gpt-3.5-turbo" = "gpt-3.5-turbo",
@@ -40,9 +39,9 @@ export class LLMController {
     private openAI: OpenAI;
     private anthropic: Anthropic;
     private gemini: GoogleGenerativeAI;
-    private openAIModels: Set<string>;
-    private geminiModels: Set<string>;
-    private anthropicModels: Set<string>;
+    public openAIModels: Set<string>;
+    public geminiModels: Set<string>;
+    public anthropicModels: Set<string>;
 
     constructor() {
         dotenv.config(); 
@@ -52,23 +51,6 @@ export class LLMController {
         this.openAIModels = new Set(Object.values(OpenAIModels));
         this.geminiModels = new Set(Object.values(GeminiModels));
         this.anthropicModels = new Set(Object.values(AnthropicModels));
-    }
-
-    public sendRequest(payload: SendRequestInput):
-        Promise<ChatCompletionStream> | 
-        Promise<Stream<MessageStreamEvent>> |
-        Promise<GenerateContentStreamResult> {
-        const model = payload.model;
-        if (this.openAIModels.has(model)) {
-            return this.sendOpenAIAPIRequest(payload);
-        } else if (this.anthropicModels.has(model)) {
-            return this.sendAnthropicAPIRequest(payload);
-        } else if (this.geminiModels.has(model)) {
-            return this.sendGeminiAPIRequest(payload);
-        } else {
-            console.error("Model doesn't match any existing models");
-            throw new Error("Model doesn't match any existing models");
-        }
     }
 
     public async sendOpenAIAPIRequest(payload: SendRequestInput): Promise<ChatCompletionStream> {
@@ -94,12 +76,7 @@ export class LLMController {
         });  
     }
 
-    /**
-     * Sends a request to the anthropic API with the provided payload.
-     * @param payload The payload to send to the anthropic API.
-     * @returns A promise that resolves with the response from the anthropic API.
-     */
-    public async sendAnthropicAPIRequest(payload: SendRequestInput): Promise<Stream<MessageStreamEvent>> {
+    public sendAnthropicAPIRequest(payload: SendRequestInput): MessageStream {
         if (!this.anthropicModels.has(payload.model)) {
             throw new Error("bad model");
         }
@@ -111,13 +88,7 @@ export class LLMController {
                 stream: true,
                 max_tokens: 2048 
         }
-        return await retryAsync(async () => {
-            const stream: Stream<MessageStreamEvent> = await this.anthropic.messages.create(chatCompletionParams); 
-            return stream;
-        }, { 
-            maxTry: 3,
-            delay: 2000
-        }); 
+        return this.anthropic.messages.stream(chatCompletionParams); 
     }
 
     
@@ -127,22 +98,20 @@ export class LLMController {
         }
         const model = this.gemini.getGenerativeModel({ model: payload.model });
         const restructuredMessage = this.restructureMessagesForGemini(payload.previousMessages, payload.prompt);
-        return await retryAsync(async () => {
-            return await model.startChat().sendMessageStream(restructuredMessage);
-        }, {
-            maxTry: 3,
-            delay: 2000,
-        });
+        return model.generateContentStream(restructuredMessage);
     }
 
+    // gets rid of extraneous data
     private restructureMessages(previousMessages: Message[], currentMessage: any): any { 
-        const simplifiedMessages = previousMessages.map(({ content, role }) => ({
-            content, role } as {content: string, role: string }));
+        const simplifiedMessages = previousMessages ? 
+            previousMessages.map(({ content, role }) => ({ content, role } as {content: string, role: string })) : 
+            []; 
         simplifiedMessages.push(currentMessage);
-        return simplifiedMessages 
+        return simplifiedMessages;    
     } 
 
-    private restructureMessagesForGemini(previousMessages: Message[], currentMessage: string): any {
+    // generates a single concatenated msg composing of past msgs + roles
+    private restructureMessagesForGemini(previousMessages: Message[], currentMessage: string): string {
         let finalMessage = "";
         let msgNum = 1;
         for (const msg of previousMessages) {
@@ -150,7 +119,7 @@ export class LLMController {
             finalMessage += `MessageNo: ${msgNum}\nRole: ${role}\nContent: ${content}\n`;
             msgNum++;
         }        
-        finalMessage += `Current-User-Message: ${currentMessage}`;
+        return finalMessage += `Current-User-Message: ${currentMessage}`;
     }
 
 }
