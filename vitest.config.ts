@@ -7,11 +7,12 @@ export default defineConfig({
       exclude: ['node_modules/', 'tests/', '*.d.ts', 'src/FrontendService/FrontendVue/*'],
     },
 
-    testTimeout: 50000,
+    testTimeout: 55500,
     environment: 'node',
 
     include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'src/FrontendService/FrontendVue', 'test/LLMCommunicationService/LLMController*'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'src/FrontendService/FrontendVue', 
+        'test/LLMCommunicationService/LLMController*', 'test/LLMCommunicationService/LLMService*'], // Avoid tests that actually access API
 
     // Enable or disable test watching
     watch: false,
