@@ -44,10 +44,10 @@ export class LLMService {
         if (!this.isServerStarted) {
             this.isServerStarted = true;
             this.server = new WebSocketServer({ port: this.PORT });
-            this.server.on('connection', (ws) => {
-                ws.on('message', this.handleMessage.bind(this, ws));
-                ws.on('close', this.close.bind(this, ws));
-                ws.on('error', this.handleError.bind(this, ws));
+            this.server.on('connection', (clientWebSocket) => {
+                clientWebSocket.on('message', this.handleMessage.bind(this, clientWebSocket));
+                clientWebSocket.on('close', this.close.bind(this, clientWebSocket));
+                clientWebSocket.on('error', this.handleError.bind(this, clientWebSocket));
             });
         }
     }
@@ -122,8 +122,8 @@ export class LLMService {
             console.error(err);
             this.sendError(ws, err.name, err.message);
             ws.close(1011, "error");
-        }).on('abort', (err: APIUserAbortError) => {
-            this.sendError(ws, err.type)
+        }).on('abort', (err) => {
+            this.sendError(ws, err.name, err.message)
             ws.close(1000, "aborted");
         });
     }
@@ -181,7 +181,7 @@ export class LLMService {
             'prompt' in payload && typeof payload.prompt === 'string'; 
     }
 
-    private shutdownServer(closeCode: number, closeMessage: string, closeServer: boolean = true): void {
+    private shutdownClientsOrServer(closeCode: number, closeMessage: string, closeServer: boolean = true): void {
         if (this.isServerStarted) {
             this.server.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -199,11 +199,11 @@ export class LLMService {
     }
 
     public close(): void {
-        this.shutdownServer(1001, 'Server shutdown'); 
+        this.shutdownClientsOrServer(1001, 'Server shutdown'); 
     }
     
     private handleError(errorCode: number = 1010, errorMessage: string = "Unexpected server error", closeServer: boolean = false): void {
-        this.shutdownServer(errorCode, errorMessage, closeServer);
+        this.shutdownClientsOrServer(errorCode, errorMessage, closeServer);
     }
 
 } 

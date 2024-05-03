@@ -72,7 +72,7 @@ describe('LLMService', () => {
         const responses: WebSocketMessage[] = [];
         return new Promise((resolve, reject) => {
             wsClient.on('message', (data: string) => {
-                const parsedData: WebSocketMessage  = JSON.parse(data);
+                const parsedData: WebSocketMessage = JSON.parse(data);
                 // console.log("Parsed Status: ", parsedData.status, "Parsed Content: ", parsedData.content);
                 responses.push(parsedData);
             });

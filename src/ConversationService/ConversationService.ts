@@ -48,10 +48,14 @@ export class ConversationService {
         if (this.isRoutesSetup == false) {
             this.isRoutesSetup = true;
 
+            // shoots back ID in data
             this.app.post('/api/messages', (req, res) => this.saveMessage(req, res)); 
+            // shoots back array of messages in data
             this.app.get('/api/messages', (req, res) => this.getRecentMessages(req, res)); 
 
+            // shoots back the conversation in data
             this.app.post('/api/conversations', (req, res) => this.startConversation(req, res)); 
+            // shoots back array of conversations in data
             this.app.get('/api/conversations', (req, res) => this.getAllConversations(req, res)); 
         }
     }
@@ -95,12 +99,7 @@ export class ConversationService {
     private async startConversation(req: Request, res: Response) {
         try {
             const requestedName = req.body.name?.trim();
-            let newConversation: Conversation;
-            if (requestedName) {
-                newConversation = this.db.startNewConversation(requestedName);
-            } else {
-                newConversation = this.db.startNewConversation();
-            }
+            const newConversation: Conversation = requestedName ? this.db.startNewConversation(requestedName) : this.db.startNewConversation();
             res.status(201).json(newConversation);
         } catch (err) {
             console.error('failed to start conversation', err);
