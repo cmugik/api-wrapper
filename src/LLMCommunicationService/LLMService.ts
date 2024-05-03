@@ -165,7 +165,7 @@ export class LLMService {
             errorCode: errorCode
         };
         this.sendDataWithStatus(ws, WebSocketStatus.Error, errorContent);
-        this.handleError(errorCode, errorMessage);
+        this.handleError(errorCode, errorMessage, false);
     }
 
     private sendDataWithStatus(ws: WebSocket, status: WebSocketStatus, content:string | ErrorContent): void {
@@ -181,7 +181,7 @@ export class LLMService {
             'prompt' in payload && typeof payload.prompt === 'string'; 
     }
 
-    private shutdownServer(closeCode: number, closeMessage: string): void {
+    private shutdownServer(closeCode: number, closeMessage: string, closeServer: boolean = true): void {
         if (this.isServerStarted) {
             this.server.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -189,11 +189,12 @@ export class LLMService {
                 }
             });
 
-            this.server.close(() => {
-                console.log('WebSocket server has been shut down.');
-            });
-
-            this.isServerStarted = false;
+            if (closeServer) {
+                this.server.close(() => {
+                    console.log('WebSocket server has been shut down.');
+                });
+                this.isServerStarted = false;
+            }
         }
     }
 
@@ -201,8 +202,8 @@ export class LLMService {
         this.shutdownServer(1001, 'Server shutdown'); 
     }
     
-    private handleError(errorCode: number = 1010, errorMessage: string = "Unexpected server error"): void {
-        this.shutdownServer(errorCode, errorMessage);
+    private handleError(errorCode: number = 1010, errorMessage: string = "Unexpected server error", closeServer: boolean = false): void {
+        this.shutdownServer(errorCode, errorMessage, closeServer);
     }
 
 } 
