@@ -1,41 +1,40 @@
 import { LLMController } from "./LLMController";
 import WebSocket, { WebSocketServer } from "ws";
-import type { SendRequestInput } from "./LLMController"; 
+import type { SendRequestInput } from "./LLMController";
 import { ChatCompletionStream } from "openai/lib/ChatCompletionStream";
 import { GenerateContentCandidate, GenerateContentStreamResult } from "@google/generative-ai";
 import { MessageStream } from "@anthropic-ai/sdk/lib/MessageStream";
 import { AnthropicError } from "@anthropic-ai/sdk/error";
-import { APIUserAbortError, OpenAIError } from "openai/error";
 
 // if status = error, then error content, otherwise string
 export interface WebSocketMessage {
-  status: WebSocketStatus;
-  content?: string | ErrorContent;  
+    status: WebSocketStatus;
+    content?: string | ErrorContent;
 }
 
 export interface ErrorContent {
-  errorName: string;
-  errorMessage: string;
-  errorCode?: number;
+    errorName: string;
+    errorMessage: string;
+    errorCode?: number;
 }
 
 export enum WebSocketStatus {
-  Role, // ATM of writing only openAIModels have this 
-  Data,
-  BlockStart,
-  BlockEnd,
-  Error
+    Role, // ATM of writing only openAIModels have this 
+    Data,
+    BlockStart,
+    BlockEnd,
+    Error
 }
 
 export class LLMService {
     private llmController: LLMController;
-    private server: WebSocketServer; 
+    private server: WebSocketServer;
     private readonly PORT: number = 8080;
     private isServerStarted: boolean = false;
     private isBlockOpen: boolean = false;
-    
+
     constructor() {
-        this.llmController = new LLMController();        
+        this.llmController = new LLMController();
         this.startServer();
     }
 
@@ -43,12 +42,14 @@ export class LLMService {
     private startServer(): void {
         if (!this.isServerStarted) {
             this.isServerStarted = true;
+            console.log("LLM Service Server Boot Start...");
             this.server = new WebSocketServer({ port: this.PORT });
             this.server.on('connection', (clientWebSocket) => {
                 clientWebSocket.on('message', this.handleMessage.bind(this, clientWebSocket));
                 clientWebSocket.on('close', this.close.bind(this, clientWebSocket));
                 clientWebSocket.on('error', this.handleError.bind(this, clientWebSocket));
             });
+            console.log("LLM Service Server Online");
         }
     }
 
@@ -84,13 +85,13 @@ export class LLMService {
                 const chunkChoices = chunk.choices[0];
                 const chunkStopReason = chunkChoices?.finish_reason || "";
                 const chunkDelta = chunk.choices[0]?.delta;
-                const chunkContent  = chunkDelta?.content || "";
+                const chunkContent = chunkDelta?.content || "";
                 const chunkRole = chunkDelta?.role || "";
                 if (chunkRole) { // the initial chunk sent is just a role, following ones are content/end/error
-                    this.sendDataWithStatus(ws, WebSocketStatus.Role, chunkRole); 
+                    this.sendDataWithStatus(ws, WebSocketStatus.Role, chunkRole);
                 } else if (chunkContent) {
                     this.sendDataWithStatus(ws, WebSocketStatus.Data, chunkContent)
-                } 
+                }
                 if (chunkStopReason) {
                     if (chunkStopReason == "length") {
                         ws.close(1000, "length");
@@ -105,27 +106,26 @@ export class LLMService {
         }
     }
 
-    // TODO delete logs outside of errors 
     private async handleAnthropicModel(ws: WebSocket, payload: any): Promise<void> {
         const streamResponse: MessageStream = this.llmController.sendAnthropicAPIRequest(payload)
         streamResponse
-        .on('text', (text: string) => {
-            this.sendDataWithStatus(ws, WebSocketStatus.Data, text);
-        }).on('contentBlock', (contentBlock) => {
-            const blockStatus: WebSocketStatus.BlockStart | WebSocketStatus.BlockEnd 
-                = this.isBlockOpen ? WebSocketStatus.BlockStart : WebSocketStatus.BlockEnd;
-            this.isBlockOpen = !this.isBlockOpen;
-            this.sendDataWithStatus(ws, blockStatus, contentBlock.text)
-        }).on('end', () => {
-            ws.close(1000, "stop");
-        }).on('error', (err: AnthropicError) => {
-            console.error(err);
-            this.sendError(ws, err.name, err.message);
-            ws.close(1011, "error");
-        }).on('abort', (err) => {
-            this.sendError(ws, err.name, err.message)
-            ws.close(1000, "aborted");
-        });
+            .on('text', (text: string) => {
+                this.sendDataWithStatus(ws, WebSocketStatus.Data, text);
+            }).on('contentBlock', (contentBlock) => {
+                const blockStatus: WebSocketStatus.BlockStart | WebSocketStatus.BlockEnd
+                    = this.isBlockOpen ? WebSocketStatus.BlockStart : WebSocketStatus.BlockEnd;
+                this.isBlockOpen = !this.isBlockOpen;
+                this.sendDataWithStatus(ws, blockStatus, contentBlock.text)
+            }).on('end', () => {
+                ws.close(1000, "stop");
+            }).on('error', (err: AnthropicError) => {
+                console.error(err);
+                this.sendError(ws, err.name, err.message);
+                ws.close(1011, "error");
+            }).on('abort', (err) => {
+                this.sendError(ws, err.name, err.message)
+                ws.close(1000, "aborted");
+            });
     }
 
 
@@ -168,7 +168,7 @@ export class LLMService {
         this.handleError(errorCode, errorMessage, false);
     }
 
-    private sendDataWithStatus(ws: WebSocket, status: WebSocketStatus, content:string | ErrorContent): void {
+    private sendDataWithStatus(ws: WebSocket, status: WebSocketStatus, content: string | ErrorContent): void {
         const webSocketMessage: WebSocketMessage = {
             status: status,
             content: content
@@ -178,10 +178,10 @@ export class LLMService {
 
     private validSendRequestInput(payload: any): payload is SendRequestInput {
         return 'model' in payload && typeof payload.model === 'string' &&
-            'prompt' in payload && typeof payload.prompt === 'string'; 
+            'prompt' in payload && typeof payload.prompt === 'string';
     }
 
-    private shutdownClientsOrServer(closeCode: number, closeMessage: string, closeServer: boolean = true): void {
+    private shutdownClientsOrServer(closeCode: number, closeMessage: string, closeServer: boolean = false): void {
         if (this.isServerStarted) {
             this.server.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -199,13 +199,13 @@ export class LLMService {
     }
 
     public close(): void {
-        this.shutdownClientsOrServer(1001, 'Server shutdown'); 
+        this.shutdownClientsOrServer(1001, 'Client closing');
     }
-    
+
     private handleError(errorCode: number = 1010, errorMessage: string = "Unexpected server error", closeServer: boolean = false): void {
         this.shutdownClientsOrServer(errorCode, errorMessage, closeServer);
     }
 
-} 
+}
 
 
