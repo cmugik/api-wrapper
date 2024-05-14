@@ -8,6 +8,7 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:integration": "test",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
