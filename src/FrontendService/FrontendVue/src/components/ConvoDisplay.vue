@@ -16,9 +16,10 @@ interface MessageIncludeWrapper {
 const props = defineProps<{
   convoId: number | null;
   outgoingPayload?: SendRequestInput | null;
+  selectBoxesMode: boolean | null;
 }>();
 
-const emit = defineEmits(['open-websocket', 'close-websocket']);
+const emit = defineEmits(['open-websocket', 'close-websocket', 'select-boxes-complete']);
 
 const messagesWithInclusionFlag: Ref<MessageIncludeWrapper[]> = ref<MessageIncludeWrapper[]>([]);
 let webSocket: WebSocket | null = null;
@@ -37,6 +38,19 @@ watch(() => props.outgoingPayload, (newOutgoingPayload) => {
   if (newOutgoingPayload) {
     setupWebsocketConnection(newOutgoingPayload);
   }
+});
+
+watch(() => props.selectBoxesMode, (newSelectBoxesMode) => {
+  console.log("HIT PROPS: ", newSelectBoxesMode);
+  if (newSelectBoxesMode === null) {
+    return;
+  }
+  if (newSelectBoxesMode === true) {
+    messagesWithInclusionFlag.value.forEach((_, index) => { messagesWithInclusionFlag.value[index].shouldInclude = true; })
+  } else {
+    messagesWithInclusionFlag.value.forEach((_, index) => { messagesWithInclusionFlag.value[index].shouldInclude = false; })
+  }
+  emit('select-boxes-complete');
 });
 
 const copyMessage = (message: Message) => {

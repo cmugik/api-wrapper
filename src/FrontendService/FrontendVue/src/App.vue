@@ -3,6 +3,7 @@ import { SendRequestInput } from '../LLMController';
 import ConvoDisplay from './components/ConvoDisplay.vue';
 import ModelConvoDisplay from './components/ModelConvoDisplay.vue';
 import UserInputDisplay from './components/UserInputDisplay.vue'
+import Toast from 'primevue/toast';
 import { ref, type Ref } from 'vue'
 
 const selectedConversationId: Ref<number | null> = ref<number | null>(null);
@@ -10,6 +11,8 @@ const selectedConversationId: Ref<number | null> = ref<number | null>(null);
 const outgoingPayload: Ref<SendRequestInput | null> = ref<SendRequestInput | null>(null);
 
 const isStreamingActive: Ref<boolean> = ref<boolean>(false);
+
+const selectBoxesMode: Ref<boolean | null> = ref<boolean | null>(null);
 
 const handleConversationSelect = (convoIdOrNull: number | null) => {
   selectedConversationId.value = convoIdOrNull;
@@ -27,16 +30,29 @@ const toggleStreamingOff = () => {
   isStreamingActive.value = false;
 }
 
+const handleSelectBoxesMode = (newSelectBoxesMode: boolean) => {
+  console.log("HIT APP.Vue", newSelectBoxesMode);
+  selectBoxesMode.value = newSelectBoxesMode;
+}
+
+const handleSelectBoxesComplete = () => {
+  selectBoxesMode.value = null;
+}
+
 </script>
 <template>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <div class="container">
+    <Toast />
     <div class="left-column">
       <div class="convo-frame">
         <ConvoDisplay :convoId="selectedConversationId" :outgoingPayload="outgoingPayload"
-          @open-websocket="toggleStreamingOn" @close-websocket="toggleStreamingOff" />
+          :selectBoxesMode="selectBoxesMode" @open-websocket="toggleStreamingOn" @close-websocket="toggleStreamingOff"
+          @select-boxes-complete="handleSelectBoxesComplete" />
       </div>
       <div class="user-input-frame">
-        <UserInputDisplay :isStreamingActive="isStreamingActive" @send-message="handleSendMessage" />
+        <UserInputDisplay :isStreamingActive="isStreamingActive" @send-message="handleSendMessage"
+          @select-boxes-mode="handleSelectBoxesMode" />
       </div>
     </div>
     <div class="model-convo-frame">
@@ -48,18 +64,24 @@ const toggleStreamingOff = () => {
 html,
 body {
   height: 100%;
-  width: 100%;
   margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 .container {
   display: flex;
+  padding: 0;
+  margin: 0;
   flex-direction: row;
+  min-height: 100vh;
+  width: 100vw;
 }
 
 .left-column {
   display: flex;
   flex-direction: column;
+  flex: 4;
 }
 
 .convo-frame {
@@ -68,22 +90,18 @@ body {
   flex-direction: column-reverse;
   justify-items: flex-start;
   align-items: start;
-  width: 1200px;
-  height: 832px;
   border: 2px solid #ccc;
   background-color: var(--surface-ground);
+  flex-grow: 1;
 }
 
 .user-input-frame {
-  width: 1200px;
-  height: 192px;
   border: 2px solid #ccc;
   background-color: var(--surface-ground);
 }
 
 .model-convo-frame {
-  width: 348px;
-  height: 1024px;
+  flex: 1;
   border: 2px solid #ccc;
   background-color: var(--surface-ground);
 }

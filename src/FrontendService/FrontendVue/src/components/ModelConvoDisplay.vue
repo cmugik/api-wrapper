@@ -99,7 +99,8 @@ onMounted(loadConversations);
   width: 100%;
 }
 
-::v-deep .model-convo-list .p-listbox-item {
+:deep .model-convo-list .p-listbox-item {
+  min-height: 40px;
   max-height: 65px;
   overflow: hidden;
   display: flex;
