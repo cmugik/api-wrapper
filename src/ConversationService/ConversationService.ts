@@ -5,6 +5,7 @@ import { retryAsync } from 'ts-retry';
 export class ConversationService {
     private app: Express;
     private db: ConversationDatabase;
+    private readonly FRONTENDPORT: number = 5173; // TODO unhardcode this
     private readonly PORT: number = 3001;
     private isRoutesSetup: boolean = false;
     private isServerStarted: boolean = false;
@@ -13,6 +14,10 @@ export class ConversationService {
         this.db = new ConversationDatabase();
         this.app = express();
         this.app.use(express.json()); // Middleware to parse JSON bodies
+        const cors = require('cors');
+        this.app.use(cors({
+            origin: 'http://localhost:' + this.FRONTENDPORT,
+        }));
     }
 
     public async initialize() {
@@ -20,26 +25,27 @@ export class ConversationService {
             try {
                 await this.db.initialize();
                 this.setupRoutes();
+                console.log("All routes up");
                 this.startServer();
-                console.log('Server setup complete');
+                console.log("Conversation Service Server setup complete");
             } catch (err) {
                 console.error('Error initializing ConversationService:', err);
             }
         },
-        {
-            maxTry: 3,
-            delay: 200,
-            onMaxRetryFunc(err) {
-                console.error('Failed 3 times initializing ConversationService:', err);
-            }, 
-        });
+            {
+                maxTry: 3,
+                delay: 200,
+                onMaxRetryFunc(err) {
+                    console.error('Failed 3 times initializing ConversationService:', err);
+                },
+            });
     }
 
     public async shutdown() {
         try {
             await this.db.close();
         } catch (err) {
-            console.error('Failed shutdown of ConversationService, likely because Database is in use/stalled:', err); 
+            console.error('Failed shutdown of ConversationService, likely because Database is in use/stalled:', err);
         }
     }
 
@@ -49,14 +55,14 @@ export class ConversationService {
             this.isRoutesSetup = true;
 
             // shoots back ID in data
-            this.app.post('/api/messages', (req, res) => this.saveMessage(req, res)); 
+            this.app.post('/api/messages', (req, res) => this.saveMessage(req, res));
             // shoots back array of messages in data
-            this.app.get('/api/messages', (req, res) => this.getRecentMessages(req, res)); 
+            this.app.get('/api/messages', (req, res) => this.getRecentMessages(req, res));
 
             // shoots back the conversation in data
-            this.app.post('/api/conversations', (req, res) => this.startConversation(req, res)); 
+            this.app.post('/api/conversations', (req, res) => this.startConversation(req, res));
             // shoots back array of conversations in data
-            this.app.get('/api/conversations', (req, res) => this.getAllConversations(req, res)); 
+            this.app.get('/api/conversations', (req, res) => this.getAllConversations(req, res));
         }
     }
 
@@ -77,7 +83,7 @@ export class ConversationService {
             res.status(201).json(savedMessageId);
         } catch (err) {
             console.error('failed to save message', err);
-            res.status(500).json({error: 'failed to save message' });
+            res.status(500).json({ error: 'failed to save message' });
         }
     }
 
@@ -91,7 +97,7 @@ export class ConversationService {
             res.status(200).json(recentMessages);
         } catch (err) {
             console.error('failed to retrieve messages', err);
-            res.status(500).json({error: 'failed to retrieve messagess'});
+            res.status(500).json({ error: 'failed to retrieve messagess' });
         }
     }
 
